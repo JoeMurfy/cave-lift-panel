@@ -10,3 +10,5 @@ from 5 different sections and
 - LED Level: Rocker switch with 4 LED Lights.
 
 After each section is completed correctly the corresonding LED in section 5 will light.
+
+Will require the Bounce2 arduino library.
