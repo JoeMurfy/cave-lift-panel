@@ -60,13 +60,13 @@ Bounce * switchesS4 = new Bounce[NUM_S4];
 // ---------------------------------------------------//
 
 // ----------------- SECTION 5 -----------------------//
-// How many switches in Section 5
-#define NUM_S5 4
-// Assign pin numbers. Section LED will always be the pin after these. i.e. 9.
-const uint8_t SWITCHES_PINS_S5[NUM_S5] = {27, 28, 29, 30};
+// How many switches in Section 5 including final override (pin 31).
+#define NUM_S5 5
+// Assign pin numbers.
+const uint8_t SWITCHES_PINS_S5[NUM_S5] = {27, 28, 29, 30, 31};
 
 // Buzzer stuff. Not vital but nice for cues to the games master.
-const int BUZZER_S5 = 31;
+const int BUZZER_S5 = 32;
 
 unsigned long lastPeriodStart;
 const int onDuration = 1000;
@@ -88,7 +88,6 @@ int currentLed = 0;   // Variable to store the index of the currently lit LED
 Bounce rockerUp = Bounce(ROCKER_DOWN_PIN, 10);  // Debounce object for increment button
 Bounce rockerDown = Bounce(ROCKER_UP_PIN, 10);  // Debounce object for decrement button
 // ---------------------------------------------------//
-
 void setup() {
 
   for (int i = 0; i < NUM_S1; i++) {
@@ -300,13 +299,14 @@ void loop() {
   for (int i = 0; i < NUM_S5; i++) {
     // If any of the required switches are off, exit loop
     if (((i == 1) && !switchesS5[i].read()) ||       // Required switches off
-        ((i == 0 || i == 2 || i == 3) && switchesS5[i].read())) { // Required switches on
+        ((i == 0 || i == 2 || i == 3 || i == 4) && switchesS5[i].read())) { // Required switches on
       needToToggleBuzzerS5 = false;
       break;
     }
   }
 
   // Turn on/off buzzer based on condition
+  // TODO: Could possibly check if all other sections were complete using their booleans
   if (needToToggleBuzzerS5) {
     if (millis() - lastPeriodStart >= periodDuration)
     {
@@ -333,4 +333,3 @@ void decrementLed() {
   }
 }
 // ----------------------------------------- //
-
