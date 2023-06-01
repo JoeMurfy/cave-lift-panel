@@ -12,7 +12,7 @@
 #define NUM_S1 7
 // Assign pin numbers. Section LED will always be the pin after these. i.e. 9.
 const uint8_t SWITCHES_PINS_S1[NUM_S1] = { 2, 3, 4, 5, 6, 7, 8 };
-const uint8_t SWITCHES_LED_PINS_S1[NUM_S1] = { 39, 40, 41, 42, 43, 44, 45 };  // Could change this to be one pin only. If so get rid of loop in Logic.
+const uint8_t SWITCHES_LED_PINS_S1 = 39;
 
 const int LED_S1 = 9;
 
@@ -39,6 +39,7 @@ Bounce* switchesS2 = new Bounce[NUM_S2];
 #define NUM_S3 8
 // Assign pin numbers.
 const uint8_t SWITCHES_PINS_S3[NUM_S3] = { 15, 16, 17, 18, 19, 20, 21, 22 };
+const uint8_t SWITCHES_LED_PINS_S3 = 40;
 
 const int LED_S3 = 23;
 
@@ -65,6 +66,7 @@ Bounce* switchesS4 = new Bounce[NUM_S4];
 #define NUM_S5 5
 // Assign pin numbers.
 const uint8_t SWITCHES_PINS_S5[NUM_S5] = { 27, 28, 29, 30, 31 };
+const uint8_t SWITCHES_LED_PINS_S5 = 41;
 
 // Buzzer stuff. Not vital but nice for cues to the games master.
 const int BUZZER_S5 = 32;
@@ -98,10 +100,9 @@ void setup() {
     switchesS1[i].interval(25);                               // interval in ms
   }
 
-  for (int i = 0; i < NUM_S1; i++) {
-    pinMode(SWITCHES_LED_PINS_S1[i], OUTPUT);  //setup leds for the 1st section
-    digitalWrite(SWITCHES_LED_PINS_S1[i], LOW);
-  }
+  pinMode(SWITCHES_LED_PINS_S1, OUTPUT);  //setup leds for the 1st section
+  digitalWrite(SWITCHES_LED_PINS_S1, LOW);
+
 
   for (int i = 0; i < NUM_S2; i++) {
     switchesS2[i].attach(SWITCHES_PINS_S2[i], INPUT_PULLUP);  //setup the bounce instance for the 2nd section
@@ -113,10 +114,21 @@ void setup() {
     switchesS3[i].interval(25);                               // interval in ms
   }
 
+  pinMode(SWITCHES_LED_PINS_S3, OUTPUT);  //setup leds for the 1st section
+  digitalWrite(SWITCHES_LED_PINS_S3, LOW);
+
   for (int i = 0; i < NUM_S4; i++) {
     switchesS4[i].attach(SWITCHES_PINS_S4[i], INPUT_PULLUP);  //setup the bounce instance for the 4th section
     switchesS4[i].interval(25);                               // interval in ms
   }
+
+  for (int i = 0; i < NUM_S5; i++) {
+    switchesS5[i].attach(SWITCHES_PINS_S5[i], INPUT_PULLUP);  //setup the bounce instance for the 4th section
+    switchesS5[i].interval(25);                               // interval in ms
+  }
+  
+  pinMode(SWITCHES_LED_PINS_S5, OUTPUT);  //setup leds for the 1st section
+  digitalWrite(SWITCHES_LED_PINS_S5, LOW);
 
   // Setup Rocker and LEDs
   pinMode(ROCKER_DOWN_PIN, INPUT_PULLUP);
@@ -147,11 +159,10 @@ void setup() {
 void loop() {
 
   // ------------ Section 1 Logic ------------ //
+  
   bool needToToggleLedS1 = true;
 
-  for (int i = 0; i < NUM_S1; i++) {
-    digitalWrite(SWITCHES_LED_PINS_S1[i], LOW);
-  }
+  digitalWrite(SWITCHES_LED_PINS_S1, LOW);
 
   for (int i = 0; i < NUM_S1; i++) {
 
@@ -177,13 +188,13 @@ void loop() {
   // Turn on/off LED based on condition
   if (needToToggleLedS1) {
     digitalWrite(LED_S1, HIGH);  // Turn on LED
+    // Serial.println("Section 1 Complete");
+    digitalWrite(SWITCHES_LED_PINS_S1, HIGH);
   } else {
     digitalWrite(LED_S1, LOW);  // Turn off LED
   }
 
-  for (int i = 0; i < NUM_S1; i++) {
-    digitalWrite(SWITCHES_LED_PINS_S1[i], HIGH);
-  }
+  digitalWrite(SWITCHES_LED_PINS_S1, HIGH);
 
   // ----------------------------------------- //
 
@@ -197,7 +208,7 @@ void loop() {
     // If it fell, flag the need to toggle the LED
     if (switchesS2[i].fell()) {
       needToToggleLedS2 = true;
-      //      Serial.println(i);
+           Serial.println(i);
     }
   }
 
@@ -213,6 +224,7 @@ void loop() {
   // Turn on/off LED based on condition
   if (needToToggleLedS2) {
     digitalWrite(LED_S2, HIGH);  // Turn on LED
+    // Serial.println("Section 2 complete.");
   } else {
     digitalWrite(LED_S2, LOW);  // Turn off LED
   }
@@ -223,13 +235,15 @@ void loop() {
 
   bool needToToggleLedS3 = true;
 
+  digitalWrite(SWITCHES_LED_PINS_S3, LOW);
+
   for (int i = 0; i < NUM_S3; i++) {
     // Update the Bounce instance :
     switchesS3[i].update();
     // If it fell, flag the need to toggle the LED
     if (switchesS3[i].fell()) {
       needToToggleLedS3 = true;
-      //      Serial.println(i);
+      Serial.println(i);
     }
   }
 
@@ -246,9 +260,12 @@ void loop() {
   // Turn on/off LED based on condition
   if (needToToggleLedS3) {
     digitalWrite(LED_S3, HIGH);  // Turn on LED
+    digitalWrite(SWITCHES_LED_PINS_S3, HIGH);
   } else {
     digitalWrite(LED_S3, LOW);  // Turn off LED
   }
+
+  digitalWrite(SWITCHES_LED_PINS_S3, HIGH);
 
   // ----------------------------------------- //
 
@@ -262,7 +279,7 @@ void loop() {
     // If it fell, flag the need to toggle the LED
     if (switchesS4[i].fell()) {
       needToToggleLedS4 = true;
-      //      Serial.println(i);
+      Serial.println(i);
     }
   }
 
