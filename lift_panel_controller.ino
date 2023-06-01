@@ -6,18 +6,22 @@
   Date: 9/05/2023
 */
 
+// COMMENT OUT LINE BELOW TO ENABLE DEBUG PRINTS TO SERIAL
+#define DEBUG
 
 // ----------------- SECTION 1 -----------------------//
 // How many switches in Section 1
 #define NUM_S1 7
-// Assign pin numbers. Section LED will always be the pin after these. i.e. 9.
+// Assign pin numbers.
 const uint8_t SWITCHES_PINS_S1[NUM_S1] = { 2, 3, 4, 5, 6, 7, 8 };
 const uint8_t SWITCHES_LED_PINS_S1 = 39;
 
 const int LED_S1 = 9;
 
+// State of LED for sections for toggling.
 int ledStateS1 = LOW;
 
+// Create Bounce objects (Bounce2 Library).
 Bounce* switchesS1 = new Bounce[NUM_S1];
 // ---------------------------------------------------//
 
@@ -62,7 +66,7 @@ Bounce* switchesS4 = new Bounce[NUM_S4];
 // ---------------------------------------------------//
 
 // ----------------- SECTION 5 -----------------------//
-// How many switches in Section 5 including final override (pin 31).
+// How many switches in Section 5 including final override switch (pin 31).
 #define NUM_S5 5
 // Assign pin numbers.
 const uint8_t SWITCHES_PINS_S5[NUM_S5] = { 27, 28, 29, 30, 31 };
@@ -72,13 +76,14 @@ const uint8_t SWITCHES_LED_PINS_S5 = 41;
 const int BUZZER_S5 = 32;
 
 unsigned long lastPeriodStart;
-const int onDuration = 1000;
+const int onDuration = 2000;
 const int periodDuration = 6000;
 
 Bounce* switchesS5 = new Bounce[NUM_S5];
 // ---------------------------------------------------//
 
 // ----------------- ROCKER SWITCH -------------------//
+// How many LED's in LED LEVEL section.
 #define ROCKER_LED_NUM 4
 
 const int ROCKER_DOWN_PIN = 33;
@@ -86,7 +91,7 @@ const int ROCKER_UP_PIN = 34;
 
 const int ROCKER_LED_PINS[ROCKER_LED_NUM] = { 35, 36, 37, 38 };  // Pins for LEDs
 
-int currentLed = 0;  // Variable to store the index of the currently lit LED
+int currentLed = -1;  // Variable to store the index of the currently lit LED, -1 so that all are off to start.
 
 Bounce rockerUp = Bounce(ROCKER_DOWN_PIN, 10);  // Debounce object for increment button
 Bounce rockerDown = Bounce(ROCKER_UP_PIN, 10);  // Debounce object for decrement button
@@ -95,6 +100,7 @@ Bounce rockerDown = Bounce(ROCKER_UP_PIN, 10);  // Debounce object for decrement
 
 void setup() {
 
+  // Loops for Switches/LED pinmode setup.
   for (int i = 0; i < NUM_S1; i++) {
     switchesS1[i].attach(SWITCHES_PINS_S1[i], INPUT_PULLUP);  //setup the bounce instance for the 1st section
     switchesS1[i].interval(25);                               // interval in ms
@@ -114,7 +120,7 @@ void setup() {
     switchesS3[i].interval(25);                               // interval in ms
   }
 
-  pinMode(SWITCHES_LED_PINS_S3, OUTPUT);  //setup leds for the 1st section
+  pinMode(SWITCHES_LED_PINS_S3, OUTPUT);  //setup leds for the 3rd section
   digitalWrite(SWITCHES_LED_PINS_S3, LOW);
 
   for (int i = 0; i < NUM_S4; i++) {
@@ -126,9 +132,12 @@ void setup() {
     switchesS5[i].attach(SWITCHES_PINS_S5[i], INPUT_PULLUP);  //setup the bounce instance for the 4th section
     switchesS5[i].interval(25);                               // interval in ms
   }
-  
+
   pinMode(SWITCHES_LED_PINS_S5, OUTPUT);  //setup leds for the 1st section
   digitalWrite(SWITCHES_LED_PINS_S5, LOW);
+
+  // Buzzer setup.
+  pinMode(BUZZER_S5, OUTPUT);
 
   // Setup Rocker and LEDs
   pinMode(ROCKER_DOWN_PIN, INPUT_PULLUP);
@@ -152,16 +161,19 @@ void setup() {
   pinMode(LED_S4, OUTPUT);
   digitalWrite(LED_S4, LOW);
 
-
+#ifdef DEBUG
   Serial.begin(9600);
+#endif
 }
 
 void loop() {
 
   // ------------ Section 1 Logic ------------ //
-  
+
   bool needToToggleLedS1 = true;
 
+  // For the switches with integrated LEDs (1, 3 and 5), I am setting their states to LOW
+  // before reading to stop the arduino reading HIGH as they share GROUND/5V
   digitalWrite(SWITCHES_LED_PINS_S1, LOW);
 
   for (int i = 0; i < NUM_S1; i++) {
@@ -171,13 +183,15 @@ void loop() {
     // If it fell, flag the need to toggle the LED
     if (switchesS1[i].fell()) {
       needToToggleLedS1 = true;
+#ifdef DEBUG
       Serial.println(i);
+#endif
     }
   }
 
   // Check switch states
   for (int i = 0; i < NUM_S1; i++) {
-    // If any of the required switches are off, exit loop
+    // If any of the required switches are off, exit loop and unflag the need to toggle LED
     if (((i == 0 || i == 3 || i == 5) && !switchesS1[i].read()) ||           // Required switches off
         ((i == 1 || i == 2 || i == 4 || i == 6) && switchesS1[i].read())) {  // Required switches on
       needToToggleLedS1 = false;
@@ -187,8 +201,7 @@ void loop() {
 
   // Turn on/off LED based on condition
   if (needToToggleLedS1) {
-    digitalWrite(LED_S1, HIGH);  // Turn on LED
-    // Serial.println("Section 1 Complete");
+    digitalWrite(LED_S1, HIGH);  // Turn on LEDs
     digitalWrite(SWITCHES_LED_PINS_S1, HIGH);
   } else {
     digitalWrite(LED_S1, LOW);  // Turn off LED
@@ -208,13 +221,15 @@ void loop() {
     // If it fell, flag the need to toggle the LED
     if (switchesS2[i].fell()) {
       needToToggleLedS2 = true;
-           Serial.println(i);
+#ifdef DEBUG
+      Serial.println(i);
+#endif
     }
   }
 
   // Check switch states
   for (int i = 0; i < NUM_S2; i++) {
-    // If any of the required switches are off, exit loop
+    // If any of the required switches are off, exit loop. Unflag LED toggle
     if ((i == 0 || i == 1 || i == 2 || i == 3) && switchesS2[i].read()) {
       needToToggleLedS2 = false;
       break;
@@ -224,7 +239,6 @@ void loop() {
   // Turn on/off LED based on condition
   if (needToToggleLedS2) {
     digitalWrite(LED_S2, HIGH);  // Turn on LED
-    // Serial.println("Section 2 complete.");
   } else {
     digitalWrite(LED_S2, LOW);  // Turn off LED
   }
@@ -243,7 +257,9 @@ void loop() {
     // If it fell, flag the need to toggle the LED
     if (switchesS3[i].fell()) {
       needToToggleLedS3 = true;
+#ifdef DEBUG
       Serial.println(i);
+#endif
     }
   }
 
@@ -279,7 +295,9 @@ void loop() {
     // If it fell, flag the need to toggle the LED
     if (switchesS4[i].fell()) {
       needToToggleLedS4 = true;
+#ifdef DEBUG
       Serial.println(i);
+#endif
     }
   }
 
@@ -319,6 +337,9 @@ void loop() {
 
   // ------------ Section 5 Logic ------------ //
   bool needToToggleBuzzerS5 = true;
+
+  digitalWrite(SWITCHES_LED_PINS_S5, LOW);
+
   // ON OFF ON ON
   // 0   1   2  3
   for (int i = 0; i < NUM_S5; i++) {
@@ -327,7 +348,9 @@ void loop() {
     // If it fell, flag the need to toggle the LED
     if (switchesS5[i].fell()) {
       needToToggleBuzzerS5 = true;
-      //      Serial.println(i);
+#ifdef DEBUG
+      Serial.println(i);
+#endif
     }
   }
 
@@ -344,11 +367,15 @@ void loop() {
   // Turn on/off buzzer based on condition
   // TODO: Could possibly check if all other sections were complete using their booleans
   if (needToToggleBuzzerS5) {
+    digitalWrite(SWITCHES_LED_PINS_S5, HIGH);
     if (millis() - lastPeriodStart >= periodDuration) {
       lastPeriodStart += periodDuration;
-      tone(BUZZER_S5, 550, onDuration);  // play 550 Hz tone in background for 'onDuration'
+      tone(BUZZER_S5, 500, onDuration);  // play 550 Hz tone in background for 'onDuration'
     }
   }
+
+  digitalWrite(SWITCHES_LED_PINS_S5, HIGH);
+
   // ----------------------------------------- //
 }
 
