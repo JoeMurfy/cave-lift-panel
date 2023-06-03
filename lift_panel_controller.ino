@@ -7,7 +7,7 @@
 */
 
 // COMMENT OUT LINE BELOW TO ENABLE DEBUG PRINTS TO SERIAL
-#define DEBUG
+// #define DEBUG
 
 // ----------------- SECTION 1 -----------------------//
 // How many switches in Section 1
@@ -74,6 +74,7 @@ const uint8_t SWITCHES_LED_PINS_S5 = 41;
 
 // Buzzer stuff. Not vital but nice for cues to the games master.
 const int BUZZER_S5 = 32;
+bool buzzerHasBuzzed = false;
 
 unsigned long lastPeriodStart;
 const int onDuration = 2000;
@@ -366,11 +367,12 @@ void loop() {
 
   // Turn on/off buzzer based on condition
   // TODO: Could possibly check if all other sections were complete using their booleans
-  if (needToToggleBuzzerS5) {
+  if (needToToggleBuzzerS5 && !buzzerHasBuzzed) {
     digitalWrite(SWITCHES_LED_PINS_S5, HIGH);
     if (millis() - lastPeriodStart >= periodDuration) {
       lastPeriodStart += periodDuration;
       tone(BUZZER_S5, 500, onDuration);  // play 550 Hz tone in background for 'onDuration'
+      buzzerHasBuzzed = true;
     }
   }
 
